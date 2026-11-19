@@ -1,0 +1,19 @@
+services:
+  rustdesk-stats:
+    build: .
+    container_name: rustdesk-stats
+    restart: always
+    ports:
+      # Público: solo /api/v1/telemetry y /health (middleware). Dashboard/API lectura = localhost.
+      - "8088:8088"
+    environment:
+      STATS_DB: /data/stats.sqlite3
+      PEERS_DB: /peers/db_v2.sqlite3
+      HBBS_CONTAINER: hbbs
+      HBBR_CONTAINER: hbbr
+      TELEMETRY_TOKEN: ${TELEMETRY_TOKEN:-statistics-rustdesk-stats}
+    volumes:
+      - ./data:/data
+      - /root/docker/rustdesk-server/data:/peers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Solo lectura de peers + docker logs; no modifica hbbs/hbbr.

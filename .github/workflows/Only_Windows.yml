@@ -19,8 +19,8 @@ env:
   FLUTTER_VERSION: "3.24.5"
   TAG_NAME: "${{ inputs.upload-tag }}"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-  VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
-  VERSION: "1.4.4"
+  VCPKG_COMMIT_ID: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
+  VERSION: "1.5.3"
   UPLOAD_ARTIFACT: "${{ inputs.upload-artifact }}"
 
 jobs:
@@ -88,9 +88,10 @@ jobs:
             echo "Archivo de configuración encontrado en: $CONFIG_FILE"
             
             # 2. Reemplazar el servidor (Solo si existe el secreto)
+            # En 1.5.x el default pasó de rs.rustdesk.com a rs-ny.rustdesk.com
             if [ -n "$CUSTOM_SERVER" ]; then
               echo "Inyectando servidor: $CUSTOM_SERVER"
-              # Usamos sed directamente sobre el archivo, sin xargs
+              sed -i "s|rs-ny.rustdesk.com|$CUSTOM_SERVER|g" "$CONFIG_FILE"
               sed -i "s|rs.rustdesk.com|$CUSTOM_SERVER|g" "$CONFIG_FILE"
             else
               echo "ADVERTENCIA: Secret RENDEZVOUS_SERVER vacío, saltando..."
@@ -99,8 +100,8 @@ jobs:
             # 3. Reemplazar la Public Key (Solo si existe el secreto)
             if [ -n "$CUSTOM_KEY" ]; then
               echo "Inyectando Public Key..."
-              # Reemplazo directo de la línea de la constante
-              sed -i "s|pub const RS_PUB_KEY:.*|pub const RS_PUB_KEY: \&'static str = \"$CUSTOM_KEY\";|g" "$CONFIG_FILE"
+              # 1.5.x usa &str (antes &'static str); el patrón .* cubre ambos
+              sed -i "s|pub const RS_PUB_KEY:.*|pub const RS_PUB_KEY: \&str = \"$CUSTOM_KEY\";|g" "$CONFIG_FILE"
             else
               echo "ADVERTENCIA: Secret RS_PUB_KEY vacío, saltando..."
             fi
